@@ -1,0 +1,7 @@
+{
+  "name": "attend",
+  "integrations": {
+    "capacitor": {}
+  },
+  "type": "angular"
+}
