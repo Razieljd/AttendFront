@@ -1,0 +1,66 @@
+<ion-content [fullscreen]="true">  
+  <div id="container">
+    <ion-img [src]="urlHome"></ion-img>
+
+
+    <ion-grid fixed>
+      <ion-row>
+        <ion-col size="12">
+          <ion-text>
+            <h2 class="mbsc-txt-muted">Ingresa con tu correo:</h2>
+          </ion-text>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="12">
+          <ion-input placeholder="Correo" type="email"></ion-input>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="12">
+          <ion-input placeholder="Contraseña" type="password"></ion-input>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="12">
+          <ion-button expand="block">Ingresa</ion-button>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="12">
+          <ion-text color="tertiary">
+            <p class="mbsc-txt-muted">
+              O ingresa con:
+            </p>
+          </ion-text>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="12">
+          <ion-button expand="block" class="facebook">
+            <ion-icon name="logo-facebook" class="ion-padding-end"></ion-icon>
+            Facebook    
+          </ion-button>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="12">
+          <ion-button expand="block" class="google">
+            <ion-icon name="logo-google" class="ion-padding-end"></ion-icon>
+            Google
+          </ion-button>
+        </ion-col>
+      </ion-row>
+      <ion-row>
+        <ion-col size="12">
+          <ion-text color="tertiary">
+            <p class="mbsc-txt-muted">
+              O <a href="/registro">registrate</a>
+            </p>
+          </ion-text>
+        </ion-col>
+      </ion-row>
+    </ion-grid>
+    
+  </div>
+</ion-content>
