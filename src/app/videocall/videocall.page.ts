@@ -51,10 +51,10 @@ export class VideocallPage implements OnInit {
     }
   }
 
-  call() {
-    this.webRTC.call(this.partnerId);
-    this.swapVideo('my-video');
-  }
+  // call() {
+  //   this.webRTC.call(this.partnerId);
+  //   this.swapVideo('my-video');
+  // }
 
   swapVideo(topVideo: string) {
     this.topVideoFrame = topVideo;

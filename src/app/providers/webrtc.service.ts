@@ -1,5 +1,5 @@
 import { Injectable } from '@angular/core';
-import Peer from 'peerjs';
+
 import { AndroidPermissions } from '@ionic-native/android-permissions/ngx';
 
 const constraints: MediaStreamConstraints = {video: true, audio: false};
@@ -10,16 +10,18 @@ const constraints: MediaStreamConstraints = {video: true, audio: false};
 })
 export class WebrtcService {
 
-  peer: Peer;
+  
   myStream: MediaStream;
   myEl: HTMLMediaElement;
   partnerEl: HTMLMediaElement;
 
   stun = 'stun.l.google.com:19302';
-  mediaConnection: Peer.MediaConnection;
-  options: Peer.PeerJSOption;
   stunServer: RTCIceServer = {
     urls: 'stun:' + this.stun,
+  };
+  pc : RTCPeerConnection;
+  options: { // not used, by default it'll use peerjs server
+    key: string; debug: number;
   };
 
   constructor() { 
@@ -54,31 +56,39 @@ export class WebrtcService {
     } catch (e) {
       this.handleError(e);
     }
-    await this.createPeer(userId);
+    const sd =this.pc.localDescription;
+    if (sd) {
+      alert("Local session: type='" +         
+        sd.type + "'; sdp description='" +
+        sd.sdp + "'");
+    } else {
+      alert("No local session yet.");
+    }
+    // await this.createPeer(userId);
   }
 
-  async createPeer(userId: string) {
-    this.peer = new Peer(userId);
-    this.peer.on('open', () => {
-      this.wait();
-    });
-  }
+  // async createPeer(userId: string) {
+  //   this.peer = new Peer(userId);
+  //   this.peer.on('open', () => {
+  //     this.wait();
+  //   });
+  // }
 
-  call(partnerId: string) {
-    const call = this.peer.call(partnerId, this.myStream);
-    call.on('stream', (stream) => {
-      this.partnerEl.srcObject = stream;
-    });
-  }
+  // call(partnerId: string) {
+  //   const call = this.peer.call(partnerId, this.myStream);
+  //   call.on('stream', (stream) => {
+  //     this.partnerEl.srcObject = stream;
+  //   });
+  // }
 
-  wait() {
-    this.peer.on('call', (call) => {
-      call.answer(this.myStream);
-      call.on('stream', (stream) => {
-        this.partnerEl.srcObject = stream;
-      });
-    });
-  }
+  // wait() {
+  //   this.peer.on('call', (call) => {
+  //     call.answer(this.myStream);
+  //     call.on('stream', (stream) => {
+  //       this.partnerEl.srcObject = stream;
+  //     });
+  //   });
+  // }
 
   handleSuccess(stream: MediaStream) {
     this.myStream = stream;
