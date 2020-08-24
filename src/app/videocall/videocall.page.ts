@@ -1,7 +1,7 @@
 import { Component, OnInit, ElementRef } from '@angular/core';
 import { WebrtcService } from '../providers/webrtc.service';
 import { Diagnostic } from '@ionic-native/diagnostic/ngx';
-import { Platform } from '@ionic/angular'
+import { Platform } from '@ionic/angular';
 
 
 @Component({
@@ -18,43 +18,39 @@ export class VideocallPage implements OnInit {
   partnerEl: HTMLMediaElement;
   permitCamera: boolean;
   permitAudio: boolean;
-  isAndroid : boolean;
-  listPermisions =[
+  isAndroid: boolean;
+  roomId = '';
+  listPermisions = [
     this.diagnostic.permission.CAMERA,
     this.diagnostic.permission.RECORD_AUDIO
   ];
-  
+
 
   constructor(
     public webRTC: WebrtcService,
     private diagnostic: Diagnostic,
     public elRef: ElementRef,
-    private platform: Platform
-    
+    private platform: Platform,
+    private pc: RTCPeerConnection
   ) { }
 
   ngOnInit(): void {
     this.myEl = this.elRef.nativeElement.querySelector('#my-video');
     this.partnerEl = this.elRef.nativeElement.querySelector('#partner-video');
     this.isAndroid = this.platform.is("android");
-    if(this.isAndroid){
+    if (this.isAndroid){
       this.checkPermissions();
     }
   }
-  
-  login() {
 
-    if ((this.permitCamera && this.permitAudio) || !this.isAndroid) {
-      this.webRTC.init(this.userId, this.myEl, this.partnerEl);
-    } else {
-      this.askPermissions();
-    }
+  init() {
+    this.webRTC.init('new', this.myEl, this.partnerEl);
   }
 
-  // call() {
-  //   this.webRTC.call(this.partnerId);
-  //   this.swapVideo('my-video');
-  // }
+  createRoom() {
+    this.webRTC.createRoom();
+  }
+
 
   swapVideo(topVideo: string) {
     this.topVideoFrame = topVideo;
@@ -63,7 +59,7 @@ export class VideocallPage implements OnInit {
   askPermissions() {
 
     this.diagnostic.requestRuntimePermissions(this.listPermisions).then(
-      statuses =>{
+      statuses => {
         if (statuses["CAMERA"] === this.diagnostic.permissionStatus.GRANTED) {
           console.log("Se autorizó la camara");
           this.permitCamera = true;
@@ -73,16 +69,16 @@ export class VideocallPage implements OnInit {
           this.permitAudio = true;
         }
       },
-      error =>{
+      error => {
         console.error(error);
       }
     );
-        
+
   }
 
   checkPermissions() {
     this.diagnostic.getPermissionsAuthorizationStatus(this.listPermisions).then(
-      statuses =>{
+      statuses => {
         if (statuses["CAMERA"] === this.diagnostic.permissionStatus.GRANTED) {
           console.log("la camara está autorizada");
           this.permitCamera = true;
@@ -91,9 +87,9 @@ export class VideocallPage implements OnInit {
           console.log("el audio está autorizado");
           this.permitAudio = true;
         }
-        
+
       },
-      error =>{
+      error => {
         console.error(error);
       }
     );

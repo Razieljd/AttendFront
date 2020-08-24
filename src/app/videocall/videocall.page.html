@@ -18,16 +18,15 @@
 
 
   <ion-row nowrap>
-    <ion-button (click)="login()">Login As: </ion-button>
-    <ion-item>
-      <ion-input type="text" [(ngModel)]="userId" placeholder="enter your nick name"></ion-input>
-    </ion-item>
+    <ion-button (click)="openUserMedia()">Open user media </ion-button>
+    <ion-button (click)="hangUp()">hang Up</ion-button>
+    <ion-button (click)="joinRoom()">join Room</ion-button>
+    <ion-button (click)="createRoom()">Create room </ion-button>
   </ion-row>
 
   <ion-row nowrap>
-    <ion-button (click)="call()">Call To: </ion-button>
-    <ion-item>
-      <ion-input type="text" [(ngModel)]="partnerId" placeholder="your partner nick name"></ion-input>
-    </ion-item>
-  </ion-row>  
+    Room {{roomId}}
+  </ion-row>
+
+
 </ion-content>

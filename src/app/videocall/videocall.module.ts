@@ -7,12 +7,14 @@ import { IonicModule } from '@ionic/angular';
 import { VideocallPageRoutingModule } from './videocall-routing.module';
 
 import { VideocallPage } from './videocall.page';
+import { HttpClientModule } from '@angular/common/http';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
+    HttpClientModule,
     VideocallPageRoutingModule
   ],
   declarations: [VideocallPage]
