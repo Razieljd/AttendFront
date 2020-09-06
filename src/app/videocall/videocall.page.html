@@ -18,15 +18,20 @@
 
 
   <ion-row nowrap>
-    <ion-button (click)="openUserMedia()">Open user media </ion-button>
-    <ion-button (click)="hangUp()">hang Up</ion-button>
-    <ion-button (click)="joinRoom()">join Room</ion-button>
-    <ion-button (click)="createRoom()">Create room </ion-button>
+    <ion-button (click)="hangUp(localUser.value)">hang Up</ion-button>
+    <ion-button (click)="joinRoomByUser(localUser.value)">join Room</ion-button>
+    <ion-button (click)="createRoom(localUser.value, remoteUser.value)">Create room </ion-button>
   </ion-row>
 
   <ion-row nowrap>
     Room {{roomId}}
   </ion-row>
+  <ion-row nowrap>
+    <ion-input name="localUser" #localUser placeholder="usuario a registrar"></ion-input>
+  </ion-row>
 
+  <ion-row nowrap>
+    <ion-input name="remoteUser" #remoteUser placeholder="usuario a llamar"></ion-input>
+  </ion-row>
 
 </ion-content>

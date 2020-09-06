@@ -25,6 +25,7 @@ import { HttpClientModule } from '@angular/common/http';
     Diagnostic,
     RTCPeerConnection,
     SplashScreen,
+    HttpClientModule,
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy }
   ],
   bootstrap: [AppComponent]

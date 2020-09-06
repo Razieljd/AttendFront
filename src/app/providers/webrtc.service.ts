@@ -2,12 +2,13 @@ import { Injectable } from '@angular/core';
 import Peer from 'peerjs';
 import { HttpClient } from '@angular/common/http';
 import { promise } from 'protractor';
+import { Room } from '../modelos/room'
 
 const constraints: MediaStreamConstraints = {video: true, audio: false};
 let peerConnection = null;
 let localStream = null;
 let remoteStream = null;
-let roomId = null;
+
 
 
 
@@ -23,12 +24,7 @@ export class WebrtcService {
   partnerEl: HTMLMediaElement;
   streamTotal: any;
   stun: string;
-  dataWebRTC = {
-    id: '',
-    usuario: '',
-    type: '',
-    sdp: ''
-  };
+  dataWebRTC: Room;
   url = 'https://attend-1.herokuapp.com/';
   stunServer: RTCIceServer = {
     urls: '',
@@ -36,9 +32,6 @@ export class WebrtcService {
     credential: ''
   };
   peerConnection = null;
-  localStream = null;
-  remoteStream = null;
-
   pc: RTCPeerConnection;
   options: { // not used, by default it'll use peerjs server
     key: string; debug: number;
@@ -46,11 +39,7 @@ export class WebrtcService {
   configuration = null;
 
   constructor(public http: HttpClient) {
-    this.getIceServer();
-    this.options = {  // not used, by default it'll use peerjs server
-      key: 'cd1ft79ro8g833di',
-      debug: 3
-    };
+    
   }
 
   getMedia() {
@@ -58,11 +47,10 @@ export class WebrtcService {
       video: true,
       audio: true
     };
+    //return navigator.mediaDevices.getUserMedia(constraints);
     navigator.mediaDevices.getUserMedia(constraints)
     .then(stream => {
-      console.log('Got MediaStream:', stream);
-      this.localStream = stream;
-      this.handleSuccess(stream);
+      localStream = stream;
     })
     .catch(error => {
       this.handleError(error);
@@ -71,15 +59,12 @@ export class WebrtcService {
   }
 
 
-  async init(userId: string, myEl: HTMLMediaElement, partnerEl: HTMLMediaElement) {
+  async init(usuario: string, myEl: HTMLMediaElement, partnerEl: HTMLMediaElement) {
     this.myEl = myEl;
-    console.log('local stream: ');
-    console.log(myEl);
+    localStream = myEl;
     this.partnerEl = partnerEl;
-    console.log(partnerEl);
-    console.log('this.stun:' + this.stun);
-    console.log(this.stunServer);
-    this.remoteStream = partnerEl;
+    remoteStream = partnerEl;
+    this.postIceServer(usuario);
     try {
       this.getMedia();
     } catch (e) {
@@ -88,13 +73,22 @@ export class WebrtcService {
   }
 
 
-  getIceServer(){
+  getIceServer(user){
     return new Promise <RTCIceServer>(resolve => {
-      this.http.get(this.url + 'get_ice_servers').subscribe(data  => {
-        this.stunServer.urls = data[1].urls;
-        this.stunServer.username = data[1].username;
-        this.stunServer.credential = data[1].credential;
-        console.log(this.stunServer);
+      this.http.get(this.url + 'get_ice_candidate/' + user).subscribe(data  => {
+        this.configuration = data;
+      }, error => {
+        console.log(error);
+      });
+    });
+  }
+
+  postIceServer(user){
+    const dataToSend = {
+      usuario: user
+    };
+    return new Promise <RTCIceServer>(resolve => {
+      this.http.post(this.url + 'post_ice_servers', dataToSend).subscribe(data  => {
         this.configuration = data;
       }, error => {
         console.log(error);
@@ -107,7 +101,7 @@ export class WebrtcService {
       user: usuario
     };
     return new Promise <RTCIceServer>(resolve => {
-      this.http.post(this.url + 'room', data).subscribe(data  => {
+      this.http.post(this.url + 'rooms', data).subscribe(data  => {
         console.log('data :');
         console.log(data);
       }, error => {
@@ -115,20 +109,20 @@ export class WebrtcService {
       });
     });
   }
-  postRoom(user, tipo, sdpin){
+  postRoom(user, tipo, sdpin, uCarller){
     const postData = {
       usuario: user,
       type: tipo,
-      sdp: sdpin
+      sdp: sdpin,
+      caller: uCarller
     };
     return new Promise <RTCIceServer>(resolve => {
-      this.http.post(this.url + 'room', postData).subscribe(data  => {
-        console.log('data :');
-        console.log(data);
-        this.dataWebRTC.id = data[1].id;
-        this.dataWebRTC.usuario = data[1].usuario;
-        this.dataWebRTC.type = data[1].type;
-        this.dataWebRTC.sdp = data[1].sdp;
+      this.http.post(this.url + 'rooms', postData).subscribe((data: Room)  => {
+        this.dataWebRTC.id = data.id;
+        this.dataWebRTC.store = data.store;
+        this.dataWebRTC.type = data.type;
+        this.dataWebRTC.sdp = data.sdp;
+        this.dataWebRTC.caller = data.caller;
         console.log('datos traidos del servidor');
         console.log(this.dataWebRTC);
       }, error => {
@@ -138,29 +132,23 @@ export class WebrtcService {
   }
 
   getRoom(user){
-      return new Promise <RTCIceServer>(resolve => {
-        this.http.get(this.url + 'room', user).subscribe(data  => {
-        console.log('data :');
-        console.log(data);
-        this.dataWebRTC.id = data[1].id;
-        this.dataWebRTC.usuario = data[1].usuario;
-        this.dataWebRTC.type = data[1].type;
-        this.dataWebRTC.sdp = data[1].sdp;
+    return new Promise (resolve => {
+      this.http.get(this.url + 'room/' + user).subscribe((data: Room)  => {
+
+        this.dataWebRTC.id = data.id;
+        this.dataWebRTC.store = data.store;
+        this.dataWebRTC.type = data.type;
+        this.dataWebRTC.sdp = data.sdp;
+        this.dataWebRTC.caller = data.caller;
         console.log('datos traidos del servidor');
         console.log(this.dataWebRTC);
+        resolve(data);
       }, error => {
         console.log(error);
       });
     });
   }
 
-
-  handleSuccess(stream: MediaStream) {
-    this.myStream = stream;
-    this.myEl.srcObject = stream;
-    this.streamTotal = stream;
-    console.log(stream);
-  }
 
   handleError(error: any) {
     if (error.name === 'ConstraintNotSatisfiedError') {
@@ -183,7 +171,7 @@ export class WebrtcService {
     }
   }
 
-  async createRoom(user) {
+  async createRoom(caller, store) {
     console.log('Create PeerConnection with configuration: ', this.configuration);
     peerConnection = new RTCPeerConnection(this.configuration);
 
@@ -199,13 +187,12 @@ export class WebrtcService {
             sdp: offer.sdp
         }
     };
-    const roomRef = this.postRoom(user, offer.type, offer.sdp);
+    const roomRef = this.postRoom(caller, offer.type, offer.sdp, store);
     const roomId = this.dataWebRTC.id;
     // document.querySelector('#currentRoom').innerText = `Current room is ${roomId} - You are the caller!`;
 
     // Code for creating room above
     // tslint:disable-next-line: prefer-for-of
-
     localStream.getTracks().forEach(track => {
       peerConnection.addTrack(track, localStream);
     });
@@ -223,14 +210,32 @@ export class WebrtcService {
         remoteStream.addTrack(track);
       });
     });
-
+    let i = 0;
     // Listening for remote session description below
-    // this.call = setInterval(() => {
-    //   this.getRoom(user);
-    //   if (roomWithOffer.offer.sdp !== this.dataWebRTC.sdp || roomWithOffer.offer.type !== this.dataWebRTC.type) {
+    this.call = setInterval(async () => {
+      i = i+1;
+      console.log("intento: "+ i);
+      const  Valor = await this.getRoom(caller);
+      if (roomWithOffer.offer.type !== this.dataWebRTC.type) {
+        const answerRoom = {
+          offer: {
+            type: this.dataWebRTC.type,
+            sdp: this.dataWebRTC.sdp
+          }
+        };
+        const answer = new RTCSessionDescription(answerRoom.offer as RTCSessionDescriptionInit);
+        await peerConnection.setRemoteDescription(answer);
+        const usuario = 'llamador';
+        console.log("estableciendo llamada");
+        await this.collectIceCandidates(caller, usuario);
+        clearInterval(this.call);
+      }
+    }, 4000);
 
-    //   }
-    // }, 4000);
+    setTimeout( () => {
+      clearInterval(this.call);
+    }
+      , 60000);
 
     // roomRef.onSnapshot(async snapshot => {
     //   console.log('Got updated room:', snapshot.data());
@@ -245,27 +250,18 @@ export class WebrtcService {
     // Listening for remote session description above
 
     // Listen for remote ICE candidates below
-  
+
     // Listen for remote ICE candidates above
   }
 
-  async joinRoomByUser(user) {
-    const room = this.getRoom(user);
+  async joinRoomByUser(user, to) {
+    const  Valor = await this.getRoom(user);
     const offer = {
       type: this.dataWebRTC.type,
       sdp: this.dataWebRTC.sdp
     };
-    await peerConnection.setRemoteDescription(offer);
-    const answer = await peerConnection.createAnswer();
-    await peerConnection.setLocalDescription(answer);
-
-    const roomWithAnswer = {
-      answer: {
-        type: answer.type,
-        sdp: answer.sdp
-      }
-    };
-    await this.postRoom(user, answer.type, answer.sdp);
+    console.log('offer: ');
+    console.log(offer);
 
     if (this.dataWebRTC.id !== null) {
       console.log('Create PeerConnection with configuration: ', this.configuration);
@@ -276,7 +272,7 @@ export class WebrtcService {
       });
   
       // Code for collecting ICE candidates below
-      this.collectIceCandidates(roomRef, this.peerConnection, this.localName, remoteName)
+      // this.collectIceCandidates(roomRef, this.peerConnection, this.localName, remoteName)
       // Code for collecting ICE candidates above
   
       peerConnection.addEventListener('track', event => {
@@ -295,13 +291,28 @@ export class WebrtcService {
   
       // Listening for remote ICE candidates above
     }
+
+    await peerConnection.setRemoteDescription(offer);
+    const answer = await peerConnection.createAnswer();
+    await peerConnection.setLocalDescription(answer);
+
+    const roomWithAnswer = {
+      answer: {
+        type: answer.type,
+        sdp: answer.sdp
+      }
+    };
+    await this.postRoom(user, answer.type, answer.sdp, to);
+
+    
   }
 
-  async hangUp(tracks, user) {
-    tracks.forEach(track => {
-      track.stop();
-    });
-
+  async hangUp(user) {
+    if (localStream) {
+      localStream.getTracks().forEach(track => {
+        track.stop();
+      });
+    }
     if (remoteStream) {
       remoteStream.getTracks().forEach(track => track.stop());
     }
@@ -312,40 +323,59 @@ export class WebrtcService {
 
     // Delete room on hangup
     if (user !== null) {
-
-      const roomRef = db.collection('rooms').doc(roomId);
-      const calleeCandidates = await roomRef.collection('calleeCandidates').get();
-      calleeCandidates.forEach(async candidate => {
-        await candidate.delete();
-      });
-      const callerCandidates = await roomRef.collection('callerCandidates').get();
-      callerCandidates.forEach(async candidate => {
-        await candidate.delete();
-      });
-      await roomRef.delete();
+      this.deleteRoom(user);
     }
 
   }
 
 
-  async collectIceCandidates(roomRef, peerConneciton, localName, remoteName) {
-    const candidatesCollection = roomRef.collection(localName);
+  async collectIceCandidates(localUser, remoteUser) {
 
     peerConnection.addEventListener('icecandidate', event => {
+      console.log('imprime evento: ');
+      console.log(event);
       if (event.candidate) {
         const json = event.candidate.toJSON();
-        candidatesCollection.add(json);
+        json.usuario = localUser;
+        console.log('peer conections informacion: ');
+        console.log(json);
       }
     });
 
-    roomRef.collection(remoteName).onSnapshot(snapshot => {
-      snapshot.docChanges().forEach(change => {
-        if (change.type === "added") {
-          const candidate = new RTCIceCandidate(change.doc.data());
-          peerConneciton.addIceCandidate(candidate);
-        }
-      });
-    });
+
+
+    // let i = 0;
+    // // Listening for remote session description below
+    // this.call = setInterval(async () => {
+    //   i = i + 1;
+    //   console.log('intento: ' + i);
+    //   const  Valor = await this.getRoom(user);
+    //   if (roomWithOffer.offer.type !== this.dataWebRTC.type) {
+    //     const answerRoom = {
+    //       offer: {
+    //           type: this.dataWebRTC.type,
+    //           sdp: this.dataWebRTC.sdp
+    //       }
+    //   };
+    //     const answer = new RTCSessionDescription(answerRoom.offer as RTCSessionDescriptionInit);
+    //     await peerConnection.setRemoteDescription(answer);
+    //     clearInterval(this.call);
+    //   }
+    // }, 4000);
+
+    // setTimeout( () => {
+    //   clearInterval(this.call);
+    // }
+    //   , 60000);
+
+    // roomRef.collection(remoteName).onSnapshot(snapshot => {
+    //   snapshot.docChanges().forEach(change => {
+    //     if (change.type === "added") {
+    //       const candidate = new RTCIceCandidate(change.doc.data());
+    //       peerConneciton.addIceCandidate(candidate);
+    //     }
+    //   });
+    // });
   }
 
   registerPeerConnectionListeners() {
