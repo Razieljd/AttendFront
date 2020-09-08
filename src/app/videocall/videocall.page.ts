@@ -56,14 +56,14 @@ export class VideocallPage implements OnInit {
     public http: HttpClient
   ) { }
 
-  ngOnInit(): void {
+  async ngOnInit() {
     this.myEl = this.elRef.nativeElement.querySelector('#my-video');
     this.partnerEl = this.elRef.nativeElement.querySelector('#partner-video');
     this.isAndroid = this.platform.is("android");
-    this.init();
     if (this.isAndroid){
-      this.checkPermissions();
+       await this.askPermissions();
     }
+    this.init();
   }
 
   askPermissions() {

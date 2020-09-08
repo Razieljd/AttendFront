@@ -1,7 +1,8 @@
 {
   "name": "attend",
   "integrations": {
-    "capacitor": {}
+    "capacitor": {},
+    "cordova": {}
   },
   "type": "angular"
 }
